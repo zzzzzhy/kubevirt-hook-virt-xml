@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io"
 	"net"
 	"os"
 	"os/exec"
@@ -64,27 +63,9 @@ func MergeKubeVirtXMLWithProvidedXML(domainXML []byte, args []string) ([]byte, e
 
 	cmd := exec.Command(virtXML, "--edit", "--print-xml", strings.Join(args, " "))
 	cmd.Stdin = strings.NewReader(domain)
-	stderr, err := cmd.StderrPipe()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Log.Errorf("Fail executing command error:%v", err)
-		return []byte{}, err
-	}
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Log.Errorf("Fail executing command  error:%v", err)
-		return []byte{}, err
-	}
-	log.Log.Infof("Execute command %v", cmd.String())
-	err = cmd.Start()
-	if err != nil {
-		log.Log.Errorf("Fail executing command error:%v", err)
-		return []byte{}, err
-	}
-	out, _ := io.ReadAll(stdout)
-	outErr, _ := io.ReadAll(stderr)
-	err = cmd.Wait()
-	if err != nil {
-		log.Log.Errorf("Fail waiting for command stdout:%s stderr: %s error:%v", out, outErr, err)
+		log.Log.Errorf("Fail waiting for command stdout:%s error:%v", out, err)
 		return []byte{}, err
 	}
 
