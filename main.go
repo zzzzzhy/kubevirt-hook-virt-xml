@@ -61,23 +61,33 @@ func MergeKubeVirtXMLWithProvidedXML(domainXML []byte, args []string) ([]byte, e
 	domain := string(domainXML)
 	domain = strings.ReplaceAll(domain, "\\u003c", "<")
 	domain = strings.ReplaceAll(domain, "\\u003e", ">")
-	cmd := exec.Command(virtXML, "--edit", "--print-xml", "--debug", strings.Join(args, " "))
-	stdin, err := cmd.StdinPipe()
+
+	cmd := exec.Command(virtXML, "--edit", "--print-xml", strings.Join(args, " "))
+	cmd.Stdin = strings.NewReader(domain)
+	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		log.Log.Errorf("Fail getting stdin:%v", err)
+		log.Log.Errorf("Fail executing command error:%v", err)
+		return []byte{}, err
+	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Log.Errorf("Fail executing command  error:%v", err)
+		return []byte{}, err
+	}
+	log.Log.Infof("Execute command %v", cmd.String())
+	err = cmd.Start()
+	if err != nil {
+		log.Log.Errorf("Fail executing command error:%v", err)
+		return []byte{}, err
+	}
+	out, _ := io.ReadAll(stdout)
+	outErr, _ := io.ReadAll(stderr)
+	err = cmd.Wait()
+	if err != nil {
+		log.Log.Errorf("Fail waiting for command stdout:%s stderr: %s error:%v", out, outErr, err)
 		return []byte{}, err
 	}
 
-	go func() {
-		defer stdin.Close()
-		io.WriteString(stdin, "values written to stdin are passed to cmd's standard input")
-	}()
-	log.Log.Infof("Execute command %v", cmd.String())
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Log.Errorf("Fail executing command output:%s error:%v", out, err)
-		return []byte{}, err
-	}
 	return []byte(out), nil
 }
 
