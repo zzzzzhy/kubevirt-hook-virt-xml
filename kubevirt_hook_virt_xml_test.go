@@ -158,18 +158,24 @@ var _ = Describe("KubevirtHookVirtXml", func() {
 </domain>
 `
 	Context("on conversion attempt", func() {
-		It("should convert with vcpus", func() {
+		It("should set vcpus value", func() {
 
 			xml, err := MergeKubeVirtXMLWithProvidedXML([]byte(testDomainXML), []string{"--vcpus=10"})
 			Expect(err).To(BeNil())
 			Expect(string(xml)).Should(ContainSubstring(`<vcpu placement="static">10</vcpu>`))
 		})
-		It("should convert for smbios", func() {
+		It("should set smbios", func() {
 
 			xml, err := MergeKubeVirtXMLWithProvidedXML([]byte(testDomainXML), []string{"--sysinfo=bios.vendor=MyVendor,bios.version=1.2.3"})
 			Expect(err).To(BeNil())
 			Expect(string(xml)).Should(ContainSubstring(`<entry name="vendor">MyVendor</entry>`))
 			Expect(string(xml)).Should(ContainSubstring(`<entry name="version">1.2.3</entry>`))
+		})
+		It("should set iotune values", func() {
+
+			xml, err := MergeKubeVirtXMLWithProvidedXML([]byte(testDomainXML), []string{"--disk=iotune.total_bytes_sec=52428800", "--edit=all"})
+			Expect(err).To(BeNil())
+			Expect(string(xml)).Should(ContainSubstring(`<total_bytes_sec>52428800</total_bytes_sec>`))
 		})
 		It("should fail with multiple changing options", func() {
 
