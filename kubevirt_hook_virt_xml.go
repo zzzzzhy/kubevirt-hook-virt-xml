@@ -114,7 +114,7 @@ func main() {
 	pflag.StringVar(&options, "args", "", "params to pass to virt-xml")
 	pflag.Parse()
 
-	args := strings.Split(options, ",")
+	args := strings.Split(options, "|")
 
 	socketPath := hooks.HookSocketsSharedDirectory + "/update.sock"
 	socket, err := net.Listen("unix", socketPath)
