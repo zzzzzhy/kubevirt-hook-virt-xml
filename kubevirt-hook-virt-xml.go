@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net"
@@ -60,12 +61,16 @@ func MergeKubeVirtXMLWithProvidedXML(domainXML []byte, args []string) ([]byte, e
 	domain := string(domainXML)
 	domain = strings.ReplaceAll(domain, "\\u003c", "<")
 	domain = strings.ReplaceAll(domain, "\\u003e", ">")
-
-	cmd := exec.Command(virtXML, "--edit", "--print-xml", strings.Join(args, " "))
+	args = append(args, "--edit")
+	args = append(args, "--print-xml")
+	cmd := exec.Command(virtXML, args...)
 	cmd.Stdin = strings.NewReader(domain)
-	out, err := cmd.CombinedOutput()
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	log.Log.Infof("Execute command: %s", cmd.String())
+	out, err := cmd.Output()
 	if err != nil {
-		log.Log.Errorf("Fail waiting for command stdout:%s error:%v", out, err)
+		log.Log.Errorf("Fail running command stdout:%s stderr: %s error:%v", out, stderr.String(), err)
 		return []byte{}, err
 	}
 

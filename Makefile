@@ -2,7 +2,7 @@ TAG ?= "latest"
 REGISTRY ?= "docker.io/alicefr"
 IMAGE ?= "virt-xml"
 build: clean
-	go build -o updater main.go
+	go build -o updater kubevirt-hook-virt-xml.go
 
 update:
 	go mod tidy
