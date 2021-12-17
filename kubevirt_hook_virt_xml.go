@@ -58,13 +58,10 @@ type v1alpha2Server struct {
 }
 
 func MergeKubeVirtXMLWithProvidedXML(domainXML []byte, args []string) ([]byte, error) {
-	domain := string(domainXML)
-	domain = strings.ReplaceAll(domain, "\\u003c", "<")
-	domain = strings.ReplaceAll(domain, "\\u003e", ">")
 	args = append(args, "--edit")
 	args = append(args, "--print-xml")
 	cmd := exec.Command(virtXML, args...)
-	cmd.Stdin = strings.NewReader(domain)
+	cmd.Stdin = strings.NewReader(string(domainXML))
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	log.Log.Infof("Execute command: %s", cmd.String())
